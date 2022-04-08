@@ -1,0 +1,22 @@
+syntax = "proto3";
+package role;
+option go_package="./;output";
+message Role {
+  int64 id = 1;
+  string name = 2;
+  string status = 3;
+}
+
+message AddRoleRequest{
+  Role role = 1;
+}
+
+message AddRoleResponse{
+  string Status = 1;
+  Role role = 2;
+  string error = 3;
+}
+
+service RoleService {
+  rpc AddRole(AddRoleRequest) returns (AddRoleResponse);
+}
