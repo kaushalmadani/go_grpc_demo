@@ -21,7 +21,6 @@ import (
 )
 
 const (
-	defaultHTTPPort = "8081"
 	defaultGRPCPort = "8082"
 )
 
