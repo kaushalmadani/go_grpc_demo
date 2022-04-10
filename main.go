@@ -16,7 +16,7 @@ import (
 	"net"
 
 	"github.com/go-kit/kit/log"
-	kitgrpc "github.com/go-kit/kit/transport/grpc"
+	kitGrpc "github.com/go-kit/kit/transport/grpc"
 	"os"
 )
 
@@ -59,7 +59,7 @@ func main() {
 			}
 			// we add the Go Kit gRPC Interceptor to our gRPC service as it is used by
 			// the here demonstrated zipkin tracing middleware.
-			baseServer := grpc.NewServer(grpc.UnaryInterceptor(kitgrpc.Interceptor))
+			baseServer := grpc.NewServer(grpc.UnaryInterceptor(kitGrpc.Interceptor))
 			output.RegisterUserServiceServer(baseServer, userServer)
 			output.RegisterRoleServiceServer(baseServer, roleGrpcServer)
 			return baseServer.Serve(grpcListener)
