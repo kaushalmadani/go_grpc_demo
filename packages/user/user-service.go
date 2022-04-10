@@ -13,21 +13,19 @@ type UserService interface {
 	GetUsers(ctx context.Context, filters ...models.Filter) ([]models.User, error)
 }
 
-type userService struct{
+type userService struct {
 	check string
 }
 
 func NewUserService() UserService { return &userService{} }
 
 func (w *userService) GetUsers(_ context.Context, filters ...models.Filter) ([]models.User, error) {
-	// query the database using the filters and return the list of documents
-	// return error if the filter (key) is invalid and also return error if no item found
-	doc := models.User{
+	userObj := models.User{
 		Name:   "J.K. Rowling",
 		Gender: "male",
 		Status: "active",
 	}
-	return []models.User{doc}, nil
+	return []models.User{userObj}, nil
 }
 func (w *userService) AddUser(ctx context.Context, user *models.User) (models.Status, models.User, error) {
 	err := logger.Log("adding user", "check this")
@@ -40,6 +38,7 @@ func (w *userService) AddUser(ctx context.Context, user *models.User) (models.St
 func (w *userService) UpdateUser(ctx context.Context, userId string, user models.User) (models.Status, error) {
 	return models.Success, nil
 }
+
 var logger log.Logger
 
 func init() {
