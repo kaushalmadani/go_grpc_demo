@@ -8,8 +8,10 @@ import (
 	"Settings/packages/user"
 	"Settings/transport"
 	"fmt"
+	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/oklog/oklog/pkg/group"
 	"google.golang.org/grpc"
+	"net/http"
 	"os/signal"
 	"syscall"
 
@@ -62,7 +64,15 @@ func main() {
 			baseServer := grpc.NewServer(grpc.UnaryInterceptor(kitGrpc.Interceptor))
 			output.RegisterUserServiceServer(baseServer, userServer)
 			output.RegisterRoleServiceServer(baseServer, roleGrpcServer)
-			return baseServer.Serve(grpcListener)
+			grpcWebServer := grpcweb.WrapServer(
+				baseServer,
+				grpcweb.WithOriginFunc(func(origin string) bool { return true }),
+			)
+			srv := &http.Server{
+				Handler: grpcWebServer,
+				Addr:    fmt.Sprintf("localhost:%d", 8084),
+			}
+			return srv.ListenAndServe()
 		}, func(error) {
 			err := grpcListener.Close()
 			if err != nil {
