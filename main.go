@@ -4,14 +4,13 @@ import (
 	epRole "Settings/endpoints/role"
 	epUser "Settings/endpoints/user"
 	"Settings/output"
+	"Settings/packages/dashboard"
 	"Settings/packages/role"
 	"Settings/packages/user"
 	"Settings/transport"
 	"fmt"
-	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/oklog/oklog/pkg/group"
 	"google.golang.org/grpc"
-	"net/http"
 	"os/signal"
 	"syscall"
 
@@ -23,7 +22,7 @@ import (
 )
 
 const (
-	defaultGRPCPort = "8082"
+	defaultGRPCPort = "8084"
 )
 
 func main() {
@@ -36,12 +35,14 @@ func main() {
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 
 	var (
-		userService    = user.NewUserService()
-		userEndpoints  = epUser.NewEndpointSet(userService)
-		userServer     = transport.NewUserServer(userEndpoints)
-		roleService    = role.NewRoleService()
-		roleEndpoints  = epRole.NewRoleEndpointSet(roleService)
-		roleGrpcServer = transport.NewRoleServer(roleEndpoints)
+		userService         = user.NewUserService()
+		userEndpoints       = epUser.NewEndpointSet(userService)
+		userServer          = transport.NewUserServer(userEndpoints)
+		roleService         = role.NewRoleService()
+		roleEndpoints       = epRole.NewRoleEndpointSet(roleService)
+		roleGrpcServer      = transport.NewRoleServer(roleEndpoints)
+		dashboardService    = dashboard.NewDashboardService()
+		dashboardGrpcServer = &transport.DashboardServer{DashService: dashboardService}
 	)
 	var g group.Group
 	{
@@ -64,16 +65,10 @@ func main() {
 			baseServer := grpc.NewServer(grpc.UnaryInterceptor(kitGrpc.Interceptor))
 			output.RegisterUserServiceServer(baseServer, userServer)
 			output.RegisterRoleServiceServer(baseServer, roleGrpcServer)
-			grpcWebServer := grpcweb.WrapServer(
-				baseServer,
-				grpcweb.WithOriginFunc(func(origin string) bool { return true }),
-			)
-			srv := &http.Server{
-				Handler: grpcWebServer,
-				Addr:    fmt.Sprintf("localhost:%d", 8084),
-			}
-			return srv.ListenAndServe()
+			output.RegisterDashboardServiceServer(baseServer, dashboardGrpcServer)
+			return baseServer.Serve(grpcListener)
 		}, func(error) {
+			fmt.Println("Closing gRPC server")
 			err := grpcListener.Close()
 			if err != nil {
 				return

@@ -1,0 +1,17 @@
+syntax = "proto3";
+package dashboard;
+option go_package = "./;output";
+
+message SubscribeRequest{
+  string DashboardId = 1;
+}
+
+message SubscribeResponse{
+  string Status = 1;
+  string error = 2;
+  int32 data = 3;
+}
+
+service DashboardService {
+  rpc Subscribe(SubscribeRequest) returns (stream SubscribeResponse) {};
+}
